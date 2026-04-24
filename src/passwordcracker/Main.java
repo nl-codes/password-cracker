@@ -4,7 +4,6 @@ package passwordcracker;
  * Password Cracker: Driver Class
  *
  * <p>
- * Entry point of the program.
  * It calls {@link Orchestrator} to crack passwords of two different password
  * protect zip files.
  * </p>

@@ -10,16 +10,10 @@ package passwordcracker;
  * workers changes.
  * </p>
  *
- * <h3>Timing breakdown</h3>
+ * <h3>Timing</h3>
  * <p>
- * The method reports three separate durations:
+ * <b>Search time</b>: time taken by thread to find correct password.
  * </p>
- * <ol>
- * <li><b>Setup time</b>: time spent computing the search-space size (password
- * generation) and dividing it into per-thread ranges.</li>
- * <li><b>Search time</b>: time taken by thread to find correct password.</li>
- * <li><b>Total time</b>: setup + search combined.</li>
- * </ol>
  *
  * <h3>Work distribution</h3>
  * <p>
@@ -30,10 +24,10 @@ package passwordcracker;
  *
  * <pre>
  * // Single-threaded (Part 1)
- * ThreadCracker.crack("protected3.zip", 3, 1);
+ * Orchestrator.crack("protected3.zip", 3, 1);
  *
  * // Multi-threaded (Part 2)
- * ThreadCracker.crack("protected5.zip", 5, >1);
+ * Orchestrator.crack("protected5.zip", 5, >1);
  * </pre>
  */
 public class Orchestrator {

@@ -9,23 +9,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Worker thread for the multi-threaded password cracker (Part 2).
+ * Worker thread for the multi-threaded password cracker.
  *
  * <p>
- * Each {@code CrackerThread} is responsible for a non-overlapping
- * slice of the total password search space, identified by a contiguous
- * range of indices {@code [startIndex, endIndex)}. It converts each
- * index to a password string and tests it against its own private copy
- * of the target zip file.
+ * Each {@code CrackerThread} is responsible for a non-overlapping slice of the
+ * total password search space, identified by a contiguous range of indices
+ * {@code [startIndex, endIndex)}. It converts each index to a password string
+ * and tests it against its own private copy of the target zip file.
  * </p>
  *
  * <h3>Shared state</h3>
  * <ul>
- * <li>{@link #passwordFound} — volatile flag; any thread sets it to
- * {@code true} when it finds the password, causing all other
- * threads to exit their loops promptly.</li>
- * <li>{@link #foundPassword} — volatile string; holds the correct
- * password once discovered.</li>
+ * <li>{@link #passwordFound}: volatile flag; any thread sets it to {@code true}
+ * when it finds the password, causing all other threads to exit their loops
+ * promptly.</li>
+ * <li>{@link #foundPassword}: volatile string; holds the correct password once
+ * discovered.</li>
  * </ul>
  *
  * <h3>File management</h3>
@@ -38,10 +37,6 @@ import java.nio.file.Path;
  * </ol>
  */
 public class CrackerThread extends Thread {
-
-    // ---------------------------------------------------------------
-    // Shared volatile state (visible to ALL threads immediately)
-    // ---------------------------------------------------------------
 
     /**
      * Set to {@code true} by the first thread that finds the password.
@@ -61,10 +56,6 @@ public class CrackerThread extends Thread {
      * </p>
      */
     public static volatile String foundPassword = null;
-
-    // ---------------------------------------------------------------
-    // Per-thread instance fields
-    // ---------------------------------------------------------------
 
     /** First password index this thread will test (inclusive). */
     private final long startIndex;
@@ -100,11 +91,7 @@ public class CrackerThread extends Thread {
      * @param passwordLength  the length of every candidate password
      * @param originalZipPath path to the original encrypted zip file
      */
-    public CrackerThread(int threadId,
-            long startIndex,
-            long endIndex,
-            int passwordLength,
-            String originalZipPath) {
+    public CrackerThread(int threadId, long startIndex, long endIndex, int passwordLength, String originalZipPath) {
         this.threadId = threadId;
         this.startIndex = startIndex;
         this.endIndex = endIndex;
@@ -112,20 +99,16 @@ public class CrackerThread extends Thread {
         this.originalZipPath = originalZipPath;
 
         // Build unique names so threads never interfere with each other's files
-        this.myZipPath = "protected-copy-" + threadId + ".zip";
-        this.myContentsDir = "contents-" + threadId;
+        this.myZipPath = "temp/protected-copy-" + threadId + ".zip";
+        this.myContentsDir = "temp/contents-" + threadId;
     }
-
-    // ---------------------------------------------------------------
-    // Static helper
-    // ---------------------------------------------------------------
 
     /**
      * Resets the shared volatile flags before a new cracking session.
      *
      * <p>
      * Must be called by the orchestrator before any threads are
-     * started, especially if running more than one session in the same JVM.
+     * started, if running multiple session at the same time.
      * </p>
      */
     public static void reset() {
@@ -133,26 +116,22 @@ public class CrackerThread extends Thread {
         foundPassword = null;
     }
 
-    // ---------------------------------------------------------------
-    // Thread body
-    // ---------------------------------------------------------------
-
     /**
      * Thread entry point.
      *
      * <ol>
      * <li>Copies the zip file to a private path.</li>
-     * <li>Iterates over the assigned index range, converting each
-     * index to a password and testing it.</li>
-     * <li>If the correct password is found, sets the shared volatile
-     * fields and exits the loop.</li>
+     * <li>Iterates over the assigned index range, converting each index to a
+     * password and testing it.</li>
+     * <li>If the correct password is found, sets the shared volatile fields and
+     * exits the loop.</li>
      * <li>Cleans up private files before the thread terminates.</li>
      * </ol>
      */
     @Override
     public void run() {
 
-        System.out.printf("[Thread %d] Starting — range [%d, %d)%n",
+        System.out.printf("[Thread %d] Starting: range [%d, %d)%n",
                 threadId, startIndex, endIndex);
 
         // ── Step 1: make a private copy of the zip ───────────────
@@ -161,21 +140,21 @@ public class CrackerThread extends Thread {
         } catch (IOException e) {
             System.err.printf("[Thread %d] ERROR copying zip: %s%n",
                     threadId, e.getMessage());
-            return; // cannot proceed without our own copy
+            return; // cannot proceed without its own copy
         }
 
         // ── Step 2: try every password in our assigned range ──────
         for (long i = startIndex; i < endIndex; i++) {
 
-            // Another thread already found it — bail out early
+            // Another thread already found it: exit out early
             if (passwordFound)
                 break;
 
-            // Convert numeric index → password string
+            // Convert numeric index to password string
             String password = PasswordUtils.indexToPassword(i, passwordLength);
 
             if (tryPassword(password)) {
-                // ── We found the password! ──────────────────────
+                // ── Password has been cracked! ──────────────────────
                 passwordFound = true; // signal other threads
                 foundPassword = password; // store result
                 System.out.printf("[Thread %d] Found password: %s%n",
@@ -190,20 +169,17 @@ public class CrackerThread extends Thread {
         System.out.printf("[Thread %d] Done.%n", threadId);
     }
 
-    // ---------------------------------------------------------------
-    // Private helpers
-    // ---------------------------------------------------------------
-
     /**
      * Tests a single candidate password against this thread's zip copy.
      *
      * <p>
-     * zip4j throws {@link ZipException} when the password is wrong,
-     * so a clean extraction means the password is correct.
+     * zip4j throws {@link ZipException} when the password is wrong, so a clean
+     * extraction means the password is correct.
      * </p>
      *
      * @param password the candidate to test
-     * @return {@code true} if the password opened the zip, {@code false} otherwise
+     * @return {@code true} if the password matches the zip's password,
+     *         {@code false} otherwise
      */
     private boolean tryPassword(String password) {
         try {
@@ -213,20 +189,16 @@ public class CrackerThread extends Thread {
             // Throws ZipException if the password is incorrect
             zipFile.extractAll(myContentsDir);
 
-            return true; // extraction succeeded → correct password
+            // reached here means extraction was success -> correct password
+            return true;
 
         } catch (ZipException e) {
-            return false; // wrong password — keep searching
+            return false; // wrong password: keep searching
         }
     }
 
     /**
      * Deletes this thread's private zip copy and extraction directory.
-     *
-     * <p>
-     * Errors are printed but do not cause the thread to throw,
-     * since cleanup is a best-effort operation.
-     * </p>
      */
     private void cleanUp() {
 
@@ -246,8 +218,8 @@ public class CrackerThread extends Thread {
      * Recursively deletes a directory and all files it contains.
      *
      * <p>
-     * A directory must be empty before {@link File#delete()} will
-     * succeed, so this method processes children first (post-order).
+     * A directory must be empty before {@link File#delete()} will succeed, so this
+     * method processes children first.
      * </p>
      *
      * @param dir the root of the directory tree to delete

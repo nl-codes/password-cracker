@@ -5,16 +5,15 @@ package passwordcracker;
  *
  * <p>
  * The search space is all strings of a given length drawn from
- * {@link #ALPHABET} (the 26 lower-case letters). Every string is
- * uniquely identified by a numeric index in the range
- * {@code [0, 26^length)}, which makes it easy to split work among
- * threads without overlap.
+ * {@link #ALPHABET} (the 26 lower-case letters). Every string is uniquely
+ * identified by a numeric index in the range {@code [0, 26^length)}, which
+ * makes it easy to split work among threads without overlap.
  * </p>
  *
  * <p>
  * Ordering example for length 3:
  * </p>
- * 
+ *
  * <pre>
  *   index 0  → "aaa"
  *   index 1  → "aab"
@@ -26,16 +25,8 @@ package passwordcracker;
  */
 public class PasswordUtils {
 
-    /** The character set used for all passwords (a–z). */
+    /** The character set used for all passwords (lower-case alphabets: a–z). */
     public static final char[] ALPHABET = "abcdefghijklmnopqrstuvwxyz".toCharArray();
-
-    // Private constructor — this class is a pure utility; no instances needed.
-    private PasswordUtils() {
-    }
-
-    // ---------------------------------------------------------------
-    // Public helpers
-    // ---------------------------------------------------------------
 
     /**
      * Returns the total number of distinct passwords of the given length.
@@ -59,9 +50,8 @@ public class PasswordUtils {
      * Converts a numeric index to its corresponding password string.
      *
      * <p>
-     * The mapping treats position {@code length - 1} as the least
-     * significant "digit" (base 26), mirroring how numbers are written
-     * in positional notation.
+     * The mapping treats position {@code length - 1} as the least significant
+     * "digit" (base 26), mirroring how numbers are written in positional notation.
      * </p>
      *
      * @param index  the password index in {@code [0, totalPasswords(length))}
