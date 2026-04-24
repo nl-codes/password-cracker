@@ -9,7 +9,7 @@ public class Example {
 
 		try {
 			ZipFile zipFile = new ZipFile("example.zip");
-			zipFile.setPassword("bad");
+			zipFile.setPassword("bad"); // Actual password: good
 			zipFile.extractAll("contents");
 			System.out.println("Successfully cracked!");
 		} catch (ZipException ze) {
