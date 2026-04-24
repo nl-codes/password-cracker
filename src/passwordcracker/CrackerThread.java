@@ -4,6 +4,7 @@ import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -157,7 +158,7 @@ public class CrackerThread extends Thread {
         // ── Step 1: make a private copy of the zip ───────────────
         try {
             Files.copy(Path.of(originalZipPath), Path.of(myZipPath));
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.err.printf("[Thread %d] ERROR copying zip: %s%n",
                     threadId, e.getMessage());
             return; // cannot proceed without our own copy
@@ -232,7 +233,7 @@ public class CrackerThread extends Thread {
         // Delete the private zip copy
         try {
             Files.deleteIfExists(Path.of(myZipPath));
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.err.printf("[Thread %d] Could not delete %s: %s%n",
                     threadId, myZipPath, e.getMessage());
         }
