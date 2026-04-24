@@ -99,8 +99,13 @@ public class CrackerThread extends Thread {
         this.originalZipPath = originalZipPath;
 
         // Build unique names so threads never interfere with each other's files
+        // All temp files go inside the temp/ directory
         this.myZipPath = "temp/protected-copy-" + threadId + ".zip";
         this.myContentsDir = "temp/contents-" + threadId;
+
+        // Ensure temp directory exists (thread-safe: mkdirs won't fail if it already
+        // exists)
+        new File("temp").mkdirs();
     }
 
     /**
