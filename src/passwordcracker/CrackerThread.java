@@ -136,6 +136,9 @@ public class CrackerThread extends Thread {
     @Override
     public void run() {
 
+        // Remove the contents of temp before trying password
+        cleanUp();
+
         System.out.printf("[Thread %d] Starting: range [%d, %d)%n",
                 threadId, startIndex, endIndex);
 
